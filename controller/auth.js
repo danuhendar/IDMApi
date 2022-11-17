@@ -165,19 +165,23 @@ const refresh = (req, res) => {
   //const token = req.cookies.token
   var obj = JSON.parse(JSON.stringify(req.body));
   var token = obj.TOKEN;
-
-  if (!token) {
-    return res.status(401).end()
-  }
+  //console.log(token);
+  
+  // if (!token) {
+  //   return res.status(401).end()
+  // }
 
   var payload
   try {
-    payload = jwt.verify(token, jwtKey)
+    payload = jwt.verify(token, jwtKey_refresh_token)
   } catch (e) {
+    //console.log(e.toString())
     if (e instanceof jwt.JsonWebTokenError) {
-      return res.status(401).end()
+      var res_msg = gs.create_msg("Error","401",e.toString());
+      return res.status(401).json(res_msg).end()
     }
-    return res.status(400).end()
+    var res_msg = gs.create_msg("Error","400",e.toString());
+    return res.status(400).json(res_msg).end()
   }
   // (END) The code uptil this point is the same as the first part of the `welcome` route
 
@@ -185,7 +189,16 @@ const refresh = (req, res) => {
   // In this case, a new token will only be issued if the old token is within
   // 30 seconds of expiry. Otherwise, return a bad request status
   const nowUnixSeconds = Math.round(Number(new Date()) / 1000)
-  if (payload.exp - nowUnixSeconds > 30) {
+  //console.log("nowUnixSeconds : "+nowUnixSeconds);
+  //console.log("payload exp : "+payload.exp);
+  //console.log("payload : "+payload);
+  //console.log("hasil : "+parseFloat(payload.exp) - parseFloat(nowUnixSeconds))
+  //console.log("payload.username : "+payload.username);
+  
+  
+  if (nowUnixSeconds > payload.exp) {
+    //console.log("lebih dari 2 jam")
+    var res_msg = gs.create_msg("Info","400","Token Expired");
     return res.status(400).end()
   }
 
@@ -194,9 +207,21 @@ const refresh = (req, res) => {
     algorithm: 'HS256',
     expiresIn: jwt_token_ExpirySeconds
   })
+ 
+  const newrefreshToken = jwt.sign({ username: payload.username }, jwtKey_refresh_token, {
+    algorithm: 'HS256',
+    expiresIn: jwtRefresh_token_ExpirySeconds
+  })
+
 
   // Set the new token as the users `token` cookie
-  res.cookie('token', newToken, { maxAge: jwt_token_ExpirySeconds * 1000 })
+  // res.cookie('token', newToken, { 
+  //     maxAge: jwt_token_ExpirySeconds * 1000 
+  // })
+
+  var data = {"TOKEN":newToken,"REFRESH_TOKEN":newrefreshToken};
+  var res_msg = gs.create_msg("Sukses","200",data);
+  res.status("200").json(res_msg);
   res.end()
 }
 
