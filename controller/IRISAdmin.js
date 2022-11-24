@@ -21,12 +21,14 @@ const GET_Supmast = (req, res) => {
   });
 }
 
-const GET_Monitoring_Posrealtime = (req, res) => {
-  console.log("Mengakses API GET_Monitoring_Posrealtime pada "+gs.get_datetime())
+const GET_Monitoring_Header_Posrealtime = (req, res) => {
+  console.log("Mengakses API GET_Monitoring_Header_Posrealtime pada "+gs.get_datetime())
   var obj = JSON.parse(JSON.stringify(req.body));
-  var IN_KODE_CABANG = obj.IN_KODE_CABANG
+  var IN_LOCATION = obj.IN_LOCATION
+  var IN_PERIODE_AWAL = obj.IN_PERIODE_AWAL
+  var IN_PERIODE_AKHIR = obj.IN_PERIODE_AKHIR  
   //var IN_NIK = obj.IN_NIK
-  var sql_query = "SELECT LAST_UPDATE,JSON_EXTRACT_RESULT_DATA(HASIL) AS HASIL FROM transaksi_posrealtime_nok WHERE KDCAB IN('"+IN_KODE_CABANG.replace(",", "','")+"');"
+  var sql_query = "CALL GET_LAPORAN_HEADER_POSREALTIME('"+IN_PERIODE_AWAL+"','"+IN_PERIODE_AKHIR+"','"+obj.IN_LOCATION+"');"
   //console.log(sql_query);
   mysqlLib.executeQuery(sql_query).then((d) => {
     var code = 200;
@@ -40,9 +42,29 @@ const GET_Monitoring_Posrealtime = (req, res) => {
   });
 }
 
+const GET_Monitoring_Detail_Posrealtime = (req, res) => {
+  console.log("Mengakses API GET_Monitoring_Detail_Posrealtime pada "+gs.get_datetime())
+  var obj = JSON.parse(JSON.stringify(req.body));
+  var IN_NIK = obj.IN_NIK
+  var IN_SUB_ID = obj.IN_SUB_ID
+  
+  var sql_query = "CALL GET_LAPORAN_DETAIL_POSREALTIME_NOK('"+IN_NIK+"','"+IN_SUB_ID+"');"
+  //console.log(sql_query);
+  mysqlLib.executeQuery(sql_query).then((d) => {
+    var code = 200;
+    var res_msg = gs.create_msg("Sukses",code,d);
+    res.status(code).json(res_msg);
+  }).catch(e => {
+    var code = 500;
+    console.log(e);
+    var res_msg = gs.create_msg(e.Stack,code,"");
+    res.status(code).json(res_msg);
+  });
+}
 
  
 module.exports = {
   GET_Supmast,
-  GET_Monitoring_Posrealtime
+  GET_Monitoring_Detail_Posrealtime,
+  GET_Monitoring_Header_Posrealtime
 }

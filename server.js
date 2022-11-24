@@ -46,9 +46,11 @@ mysqllib.connect().then(() => {
     //-- ROUTER IRIS ADMIN SUPMAST --//
     const { GET_Restart } = require('./controller/restart_service')
     app.get("/user/restart_service", cors(corsOptions), GET_Restart)
-     //-- ROUTER IRIS ADMIN MONITORING POSREALTIME --//
-    const { GET_Monitoring_Posrealtime } = require('./controller/IRISAdmin')
-    app.post("/user/monitoring_posrealtime", cors(corsOptions), GET_Monitoring_Posrealtime)
+    //-- ROUTER IRIS ADMIN MONITORING POSREALTIME --//
+    const { GET_Monitoring_Header_Posrealtime,GET_Monitoring_Detail_Posrealtime } = require('./controller/IRISAdmin')
+    app.post("/user/monitoring_header_posrealtime", cors(corsOptions), GET_Monitoring_Header_Posrealtime)
+    //const { GET_Monitoring_Detail_Posrealtime } = require('./controller/IRISAdmin')
+    app.post("/user/monitoring_detail_posrealtime", cors(corsOptions), GET_Monitoring_Detail_Posrealtime)
 
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);
