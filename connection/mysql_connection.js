@@ -1,5 +1,7 @@
 const mysql = require('mysql2');
 const config = require('../config.json')
+const jwt = require('jsonwebtoken')
+const jwtKey = 'my_secret_key'
 
  const mysqlConfig = {
      host: config.database.HOSTNAME,
@@ -73,5 +75,32 @@ async function execSP(spName, params){
     }
   })
 }
+
+
+async function Verifikasi_Token(token) {
+  return new Promise((resolve, reject) => {
+    try{
+      // We can obtain the session token from the requests cookies, which come with every request
+      var payload;
+      //payload = jwt.verify(token, jwtKey)
+      jwt.verify(token,jwtKey, (e, r, f) => {
+        if(e){
+          reject(e)
+        }
+        else{
+          resolve(r)
+        }
+      });
+
+    }catch(ex){
+      reject(ex)
+    }
+  })    
+
+   
+}
+
+
 module.exports.executeQuery = executeQuery
 module.exports.execSP = execSP
+module.exports.Verifikasi_Token = Verifikasi_Token

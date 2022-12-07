@@ -130,8 +130,8 @@ const signIn = (req, res) => {
 const welcome = (req, res) => {
   console.log("Mengakses API welcome pada "+gs.get_datetime())
   // We can obtain the session token from the requests cookies, which come with every request
-  const token = req.cookies.token
-
+  var obj = JSON.parse(JSON.stringify(req.body));
+  const token = obj.IN_TOKEN;
   // if the cookie is not set, return an unauthorized error
   if (!token) {
     return res.status(401).end()
@@ -144,19 +144,27 @@ const welcome = (req, res) => {
     // if the token is invalid (if it has expired according to the expiry time we set on sign in),
     // or if the signature does not match
     payload = jwt.verify(token, jwtKey)
+    res.send("Welcome "+payload.username)
   } catch (e) {
     if (e instanceof jwt.JsonWebTokenError) {
       // if the error thrown is because the JWT is unauthorized, return a 401 error
-      return res.status(401).end()
+      
+      var code = 401;
+      var res_msg = gs.create_msg("Token Error",code,"");
+      res.status(code).json(res_msg);
+      res.end()
     }
     // otherwise, return a bad request error
-    return res.status(400).end()
+    var code = 400;
+    var res_msg = gs.create_msg("Error :"+e.Stack,code,"");
+    res.status(code).json(res_msg);
+    res.end()
   }
 
-
+  return res
   // Finally, return the welcome message to the user, along with their
   // username given in the token
-  res.send("Welcome ${payload.username}!")
+ 
 }
 
 

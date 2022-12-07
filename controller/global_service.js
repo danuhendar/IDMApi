@@ -410,6 +410,8 @@ async function ins_transreport(topic,obj,nama_table) {
 }
 
 
+
+
 module.exports = {
   create_msg,
   get_datetime,
