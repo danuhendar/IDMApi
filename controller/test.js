@@ -1,29 +1,21 @@
 const redis = require('redis')
 var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');
-const client = redis.createClient({
-  socket: {
-      host: '127.0.0.1',
-      port: 6379
-  },
-  legacyMode: true
+
+const client = redis.createClient(6379, "172.24.52.3");
+
+client.on('connect', function() {
+  console.log('✅ 💃 connect redis success !')
 });
 
-client.connect();
 
 client.on("error", function (err) {
-  console.log("Error " + err);
+  console.log("" + err);
 });
 
 client.on("ready", () => {
   console.log('✅ 💃 redis have ready !')
- })
- 
- client.on("connect", () => {
-  console.log('✅ 💃 connect redis success !')
- })
-
-
+});
 
 const getIpMysql = (req, res) => {
     console.log("Mengakses API getIP pada "+gs.get_datetime())
@@ -35,7 +27,7 @@ const getIpMysql = (req, res) => {
       var code = 200;
       var res_msg = gs.create_msg("Sukses",code,d);
       res.status(code).json(res_msg);
-    }).catch(e => {
+    }).catch(e => {c
       var code = 500;
       console.log(e);
       var res_msg = gs.create_msg(e.Stack,code,"");
