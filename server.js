@@ -51,9 +51,10 @@ mysqllib.connect().then(() => {
     app.post("/user/monitoring_header_trigger_toko", cors(corsOptions), GET_Monitoring_Header_Trigger_Toko)
     app.post("/user/monitoring_detail_trigger_toko", cors(corsOptions), GET_Monitoring_Detail_Trigger_Toko)
     //-- ROUTER & CONTROLLER REDIS --//
-    const{getIpMysql,getIPRedis} = require('./controller/test');
+    const{getIpMysql,getIPRedis,ServiceBackend} = require('./controller/test');
     app.post("/user/get_ip_mysql",cors(corsOptions), getIpMysql);
     app.post("/user/get_ip_redis",cors(corsOptions), getIPRedis);
+    app.get("/user/ServiceBackend/:controll/:nama_service",cors(corsOptions), ServiceBackend);
 
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);

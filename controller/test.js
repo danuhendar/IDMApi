@@ -1,8 +1,10 @@
 const redis = require('redis')
 var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');
+const {NodeSSH} = require('node-ssh')
+const ssh = new NodeSSH()
 
-const client = redis.createClient(6379, "172.24.52.3");
+const client = redis.createClient(6379, "127.0.0.1");
 
 client.on('connect', function() {
   console.log('✅ 💃 connect redis success !')
@@ -40,8 +42,9 @@ const getIpMysql = (req, res) => {
     console.log("Mengakses API getIPRedis pada "+gs.get_datetime())
     var obj = JSON.parse(JSON.stringify(req.body));
     var IN_KODE_CABANG = obj.IN_KODE_CABANG
+    var IN_ID = obj.IN_ID
 
-    const redisKey = 'getip'
+    const redisKey = 'getip_'+IN_KODE_CABANG+'_'+IN_ID
     client.get(redisKey,(err,data) => {
         //console.log(data)
         if(data != null){// cek apakah ada di redis atau tidak
@@ -49,8 +52,8 @@ const getIpMysql = (req, res) => {
             console.log("data exists");
             var code = 200;
 
-            //var res_msg = gs.create_msg("Sukses",code,JSON.parse(data));
-            res.status(code).send({isCached:true,data:JSON.parse(data)});
+            var res_msg = gs.create_msg("Sukses Cache",code,data);
+            res.status(code).json(res_msg);
 
             //res.status(200).send({isCached:true,data:JSON.parse(data)});
         }else{
@@ -70,8 +73,47 @@ const getIpMysql = (req, res) => {
     });
 }
 
-  module.exports = {
-    getIpMysql,
-    getIPRedis
+const ServiceBackend = (req,res) => {
+  console.log("Mengakses API restart pada "+gs.get_datetime())
+  var controll     = req.params.controll
+  var nama_service = req.params.nama_service
+
+  console.log("nama_service : "+nama_service);
+  // or with inline privateKey
+  try{
+    ssh.connect({
+      host: '172.24.52.3',
+      username: 'root',
+      password: 'edpho@idm',
+      port:22,
+      readyTimeout: 200000
+    })
+    .then(function() {
+      // Local, Remote
+      // Putting entire directories
+      const failed = []
+      const successful = []
+      // Command
+      ssh.execCommand('systemctl '+controll+' '+nama_service, { cwd:'/home/idmcmd/' }).then(function(result) {
+        //console.log('STDOUT: ' + result.stdout)
+        //console.log('STDERR: ' + result.stderr)
+        //console.log('CODE: '+result.code)
+        ssh.dispose();
+        var code = 200;
+        res.status(code).send("Sukses "+controll+" service : "+nama_service);
+      })
+    });
+  }catch(e){
+      var code = 500;
+      res.status(code).send("Error : "+e.Stack);
   }
+  
+ 
+}
+
+module.exports = {
+    getIpMysql,
+    getIPRedis,
+    ServiceBackend
+}
   
