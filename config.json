@@ -12,8 +12,8 @@
     },
     "database": {
         "HOSTNAME": "172.24.16.131",
-        "USER": "root",
-        "PASSWORD": "edpho@Idm2020",
+        "USER": "idmapi",
+        "PASSWORD": "edpho@Idm2023",
         "DATABASE": "idmcmd",
         "PORT":6446
     },

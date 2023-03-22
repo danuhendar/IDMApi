@@ -4,8 +4,8 @@ var gs = require('../controller/global_service');
 const {NodeSSH} = require('node-ssh')
 const ssh = new NodeSSH()
 
-const client = redis.createClient(6379, "127.0.0.1");
-
+const client = redis.createClient(6379, "172.24.52.3");
+/*
 client.on('connect', function() {
   console.log('✅ 💃 connect redis success !')
 });
@@ -18,6 +18,7 @@ client.on("error", function (err) {
 client.on("ready", () => {
   console.log('✅ 💃 redis have ready !')
 });
+*/
 
 const getIpMysql = (req, res) => {
     console.log("Mengakses API getIPMysql pada "+gs.get_datetime())
@@ -112,8 +113,8 @@ const ServiceBackend = (req,res) => {
 }
 
 module.exports = {
-    getIpMysql,
-    getIPRedis,
+    //getIpMysql,
+    //getIPRedis,
     ServiceBackend
 }
   

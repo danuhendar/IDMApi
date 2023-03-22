@@ -5,6 +5,22 @@ const jwt_token_ExpirySeconds = 1800 //-- expired 30 menit
 const jwtRefresh_token_ExpirySeconds = 7200 //-- expired 2 jam
 const bodyParser = require('body-parser')
 
+const redis = require('redis')
+
+const client = redis.createClient(6379, "172.24.52.3");
+
+client.on('connect', function() {
+  console.log('✅ 💃 connect redis success !')
+});
+
+client.on("error", function (err) {
+  console.log("" + err);
+});
+
+client.on("ready", () => {
+  console.log('✅ 💃 redis have ready !')
+});
+
 
 var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');
@@ -235,11 +251,45 @@ const refresh = (req, res) => {
   res.end()
 }
 
+const get_branch_coverage_user = (req,res) => {
+  var obj = JSON.parse(JSON.stringify(req.body));
+  var IN_NIK = obj.IN_NIK
 
+  const redisKey = 'getbranch_coverage_'+IN_NIK
+    client.get(redisKey,(err,data) => {
+        //console.log(data)
+        if(data != null){// cek apakah ada di redis atau tidak
+            console.log("Mengakses API get_branch_coverage_user REDIS pada "+gs.get_datetime())
+            var code = 200;
+            var res_msg = gs.create_msg("Sukses Cache",code,data);
+            res.status(code).json(res_msg);
+            //res.status(200).send({isCached:true,data:JSON.parse(data)});
+        }else{
+            console.log("data didn't exists");
+            console.log("Mengakses API get_branch_coverage_user DB pada "+gs.get_datetime())
+            
+            
+            mysqlLib.executeQuery("SELECT LOCATION,BRANCH_CODE AS BRANCH_COVERAGE FROM idm_org_structure WHERE NIK = '"+IN_NIK+"' ").then((d) => {
+              var code = 200;
+              client.set(redisKey,JSON.stringify(d),'EX',60); 
+              var res_msg = gs.create_msg("Sukses",code,d);
+              res.status(code).json(res_msg);
+            }).catch(e => {
+              var code = 500;
+              console.log(e);
+              var res_msg = gs.create_msg(e.toString(),code,"");
+              res.status(code).json(res_msg);
+            });
+        }
+    });
+
+
+}
 
 
 module.exports = {
   signIn,
   welcome,
-  refresh
+  refresh,
+  get_branch_coverage_user
 }

@@ -27,11 +27,13 @@ mysqllib.connect().then(() => {
     //-- ROUTER MASTER DATA TOKOMAIN NON STATION --//
     app.post("/user/GET_Tokomain_Non_Station", GET_Tokomain_Non_Station)
     //-- CONTROLLER LOGIN --//
-    const {signIn,welcome,refresh} = require('./controller/auth')
+    const {signIn,welcome,refresh,get_branch_coverage_user} = require('./controller/auth')
     //-- ROUTER AUTH LOGIN --//
     app.post("/signIn", signIn)
     app.post("/welcome", welcome)
     app.post("/refresh", refresh)
+    //-- ROUTER BRANCH COVERAGE USER --//
+    app.post("/get_branch_coverage_user",get_branch_coverage_user)
     //-- CONTROLLER ABSENSI PROSES --//
     //const { GET_Absensi_Proses_Aktivasi } = require('./controller/absensi_proses')
     //-- ROUTER ABSENSI PROSES --//
@@ -51,9 +53,9 @@ mysqllib.connect().then(() => {
     app.post("/user/monitoring_header_trigger_toko", cors(corsOptions), GET_Monitoring_Header_Trigger_Toko)
     app.post("/user/monitoring_detail_trigger_toko", cors(corsOptions), GET_Monitoring_Detail_Trigger_Toko)
     //-- ROUTER & CONTROLLER REDIS --//
-    const{getIpMysql,getIPRedis,ServiceBackend} = require('./controller/test');
-    app.post("/user/get_ip_mysql",cors(corsOptions), getIpMysql);
-    app.post("/user/get_ip_redis",cors(corsOptions), getIPRedis);
+    const{ServiceBackend} = require('./controller/test');
+    //app.post("/user/get_ip_mysql",cors(corsOptions), getIpMysql);
+    //app.post("/user/get_ip_redis",cors(corsOptions), getIPRedis);
     app.get("/user/ServiceBackend/:controll/:nama_service",cors(corsOptions), ServiceBackend);
 
     console.log('todo list RESTful API server started on: ' + port);
