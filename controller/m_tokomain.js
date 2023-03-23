@@ -69,7 +69,7 @@ const GET_Tokomain = (req, res) => {
             
             client.set(redisKey,JSON.stringify(d),'EX',7200); // simpan hasil query ke dalam redis dalam bentuk JSON yang sudah di jadikan string, kita setting expired selaman 60 (detik)
             var code = 200;
-            var res_msg = gs.create_msg("Sukses",code,d);
+            var res_msg = gs.create_msg("Sukses",code,JSON.stringify(d));
             res.status(code).json(res_msg);
 
           }).catch(e => {
