@@ -1,5 +1,6 @@
 const redis = require('redis')
 var mysqlLib = require('../connection/mysql_connection');
+var mqttLib = require('../connection/mqtt_connection');
 var gs = require('../controller/global_service');
 const {NodeSSH} = require('node-ssh')
 const ssh = new NodeSSH()
@@ -101,20 +102,72 @@ const ServiceBackend = (req,res) => {
         //console.log('CODE: '+result.code)
         ssh.dispose();
         var code = 200;
-        res.status(code).send("Sukses "+controll+" service : "+nama_service);
+        if(controll == 'status'){
+           res.status(code).send(result.stdout);
+        }else{
+           res.status(code).send("Sukses "+controll+" service : "+nama_service);
+        }
+       
       })
     });
   }catch(e){
       var code = 500;
       res.status(code).send("Error : "+e.Stack);
   }
-  
- 
+}
+
+const TriggerListener = (req,res) => {
+   var kode_cabang_user = req.params.kode_cabang_user;
+   var ip_listener = req.params.ip_listener;
+   console.log("Trigger Listeners : "+ip_listener);
+   try{
+
+      var res_message = {
+            "TASK": "PUB_INITIAL",
+            "ID": gs.get_id(),
+            "SOURCE": "IDMApi",
+            "COMMAND": "",
+            "OTP": "-",
+            "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+            "VERSI": "1.0.1",
+            "HASIL": "",
+            "FROM": "IDMApi",
+            "TO": ip_listener,
+            "SN_HDD": "-",
+            "IP_ADDRESS": "172.24.52.3",
+            "STATION": "-",
+            "CABANG": kode_cabang_user,
+            "FILE": "-",
+            "NAMA_FILE": "-",
+            "CHAT_MESSAGE": "-",
+            "REMOTE_PATH": "-",
+            "LOCAL_PATH": "-",
+            "SUB_ID": gs.get_subid()
+      };
+      var topic_return = ""+ip_listener+"/";
+      console.log("topic_return : "+topic_return)
+      
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+        var code = 200;
+        var res_msg = gs.create_msg("Sukses Trigger Listener : "+ip_listener,code,d);
+        res.status(code).json(res_msg);
+      }).catch(e => {
+        var code = 500;
+        console.log(e);
+        var res_msg = gs.create_msg(e.Stack,code,"");
+        res.status(code).json(res_msg);
+      });
+  }catch(e){
+      var code = 500;
+      console.log(e.toString());
+      res.status(code).send("Error : "+e.toString());
+  }
 }
 
 module.exports = {
     //getIpMysql,
     //getIPRedis,
-    ServiceBackend
+    ServiceBackend,
+    TriggerListener
 }
   
