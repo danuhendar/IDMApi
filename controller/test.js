@@ -119,6 +119,7 @@ const ServiceBackend = (req,res) => {
 const TriggerListener = (req,res) => {
    var kode_cabang_user = req.params.kode_cabang_user;
    var ip_listener = req.params.ip_listener;
+
    console.log("Trigger Listeners : "+ip_listener);
    try{
 
@@ -126,7 +127,7 @@ const TriggerListener = (req,res) => {
             "TASK": "PUB_INITIAL",
             "ID": gs.get_id(),
             "SOURCE": "IDMApi",
-            "COMMAND": "",
+            "COMMAND": "C:\\IDMCommandListeners\\IDMCommandSpyService.exe",
             "OTP": "-",
             "TANGGAL_JAM": gs.get_tanggal_jam("1"),
             "VERSI": "1.0.1",
@@ -145,6 +146,7 @@ const TriggerListener = (req,res) => {
             "SUB_ID": gs.get_subid()
       };
       var topic_return = ""+ip_listener+"/";
+      console.log("res_message : "+JSON.stringify(res_message))
       console.log("topic_return : "+topic_return)
       
       mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
