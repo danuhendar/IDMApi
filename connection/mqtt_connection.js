@@ -28,6 +28,10 @@ client.on("error",function(error){
   process.exit(1)
 });
 
+
+
+
+
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
@@ -40,6 +44,7 @@ function PublishMessage (res_topic,res_message) {
             console.log('Still Connected'); 
             //console.log("PAYLOAD TO IDMCommandListeners : "+res_message);
             const compressed = res_message;
+            //const compressed = await gzip(res_message);  
             client.publish(res_topic,compressed);
             console.log("Publish : "+res_topic);   
 
@@ -55,4 +60,43 @@ function PublishMessage (res_topic,res_message) {
   })  
 }
 
+function SubsTopic (res_topic) {
+  //console.log(`query: `, query)
+  return new Promise((resolve, reject) => {
+    try{
+        if (client.connected === true) {
+            console.log('Still Connected'); 
+            //console.log("PAYLOAD TO IDMCommandListeners : "+res_message);
+            client.subscribe(res_topic,{qos:0});
+            console.log("SUBSCRIBE TOPIC : "+res_topic);
+
+            client.on('message',function(topic, compressed){
+              const decompressed = compressed;
+
+              //const parseJson = JSON.parse(decompressed);
+              console.log("TOPIC FROM : "+topic)
+              console.log("PESAN : "+decompressed)
+              sleep(10000)
+              client.unsubscribe(topic);
+              console.log("UNSUB : "+topic);
+          });
+
+            
+        }else{
+            console.log('DisConnected'); 
+        }
+        resolve()
+        
+    }
+    catch(ex){
+      reject(ex)
+    }
+  })  
+}
+
+
+
+
+
 module.exports.PublishMessage = PublishMessage
+module.exports.SubsTopic = SubsTopic

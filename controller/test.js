@@ -146,8 +146,8 @@ const TriggerListener = (req,res) => {
             "SUB_ID": gs.get_subid()
       };
       var topic_return = ""+ip_listener+"/";
-      console.log("res_message : "+JSON.stringify(res_message))
-      console.log("topic_return : "+topic_return)
+      //console.log("res_message : "+JSON.stringify(res_message))
+      //console.log("topic_return : "+topic_return)
       
       mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
         var code = 200;
@@ -166,10 +166,169 @@ const TriggerListener = (req,res) => {
   }
 }
 
+const UpdateCabangIni = (req,res) => {
+   var kode_cabang = req.params.kode_cabang;
+   var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
+   var ip_listener = req.params.ip_listener;
+
+   console.log("Perbaikan Cabang ini ke : "+ip_listener);
+   try{
+      var command = "taskkill /F /IM IDMCommandListenersApp.exe*\n"+
+                    "taskkill /F /IM IDMCommandSpy.exe*\n"+
+                      "tskill idmcom*\n"+
+                      "C:\n"+
+                      "cd\\IDMCommandListeners\n"+
+                      "del cabang.ini /S\n"+
+                      "echo "+kode_cabang+" > cabang.ini\n"+
+                      "sc start IDMCommandSpy\n"+
+                      "start IDMCommandListenersApp.exe\n"+
+                      "exit;";
+      //console.log("command : "+command);
+      var res_message = {
+            "TASK": "COMMAND",
+            "ID": gs.get_id(),
+            "SOURCE": "IDMApi",
+            "COMMAND": command,
+            "OTP": "-",
+            "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+            "VERSI": "1.0.1",
+            "HASIL": "",
+            "FROM": "IDMApi",
+            "TO": ip_listener,
+            "SN_HDD": "-",
+            "IP_ADDRESS": "172.24.52.3",
+            "STATION": "-",
+            "CABANG": list_kode_cabang,
+            "FILE": "-",
+            "NAMA_FILE": "-",
+            "CHAT_MESSAGE": "-",
+            "REMOTE_PATH": "-",
+            "LOCAL_PATH": "-",
+            "SUB_ID": gs.get_subid()
+      };
+      var topic_return = "COMMAND/"+ip_listener+"/";
+      //console.log("res_message : "+JSON.stringify(res_message))
+      //console.log("topic_return : "+topic_return)
+      
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+        var code = 200;
+        var res_msg = gs.create_msg("Sukses Eksekusi Cabang ini",code,d);
+        res.status(code).json(res_msg);
+      }).catch(e => {
+        var code = 500;
+        console.log(e);
+        var res_msg = gs.create_msg(e.Stack,code,"");
+        res.status(code).json(res_msg);
+      });
+  }catch(e){
+      var code = 500;
+      console.log(e.toString());
+      res.status(code).send("Error : "+e.toString());
+  }
+}
+
+function onMessageListeners(){
+
+
+
+}
+
+const DownloadListener = (req,res) => {
+   var kode_cabang = req.params.kode_cabang;
+   var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
+   var ip_listener = req.params.ip_listener;
+   var location = req.params.location;
+   var username_ftp = '';
+   var pass_ftp = '';
+   var ip_ftp = '';
+   var port_ftp = '';
+   var path_ftp = '';
+   var query_ftp = "SELECT * FROM m_ftp_cabang WHERE KDCAB = '"+location+"';"
+   mysqlLib.executeQuery(query_ftp).then((d) => {
+       
+       username_ftp = d[0].USERNAME;
+       ip_ftp = d[0].HOST;
+       pass_ftp = d[0].PASSWORD;
+       port_ftp = d[0].PORT;
+       if(location == 'REG4'){
+          path_ftp = 'DHR/IDMCMD/TESTING/'
+       }else{
+          path_ftp = 'IDMCMD/'
+       }
+
+      console.log("Download Listener ke : "+ip_listener);
+      try{
+          var command = "D:\\Backoff\\wget -P d:/ --user="+username_ftp+" --password="+pass_ftp+" --limit-rate=100K ftp://"+ip_ftp+":"+port_ftp+"/"+path_ftp+"IDMCommandListenersV421RC1-FILEUPDATE.zip -N \n"+
+                        "exit";
+          console.log("command : "+command);
+          var res_message = {
+                "TASK": "COMMAND",
+                "ID": gs.get_id(),
+                "SOURCE": "IDMApi",
+                "COMMAND": command,
+                "OTP": "-",
+                "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+                "VERSI": "1.0.1",
+                "HASIL": "",
+                "FROM": "IDMApi",
+                "TO": ip_listener,
+                "SN_HDD": "-",
+                "IP_ADDRESS": "172.24.52.3",
+                "STATION": "-",
+                "CABANG": list_kode_cabang,
+                "FILE": "-",
+                "NAMA_FILE": "-",
+                "CHAT_MESSAGE": "-",
+                "REMOTE_PATH": "-",
+                "LOCAL_PATH": "-",
+                "SUB_ID": gs.get_subid()
+          };
+          var topic_return = "COMMAND/"+ip_listener+"/";
+          mqttLib.SubsTopic(topic_return+"#");
+          //console.log("res_message : "+JSON.stringify(res_message))
+          //console.log("topic_return : "+topic_return)
+          
+          mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+            var code = 200;
+            var res_msg = gs.create_msg("Sukses Eksekusi DownloadListener",code,d);
+            res.status(code).json(res_msg);
+
+          }).catch(e => {
+            var code = 500;
+            console.log(e);
+            var res_msg = gs.create_msg(e.Stack,code,"");
+            res.status(code).json(res_msg);
+          });
+
+
+      }catch(e){
+          var code = 500;
+          console.log(e.toString());
+          res.status(code).send("Error : "+e.toString());
+      }
+     
+   }).catch(e => {c
+      var code = 500;
+      console.log(e);
+      var res_msg = gs.create_msg(e.Stack,code,"");
+     
+   });
+
+
+
+   
+}
+
+
+
+
+
 module.exports = {
     //getIpMysql,
     //getIPRedis,
     ServiceBackend,
-    TriggerListener
+    TriggerListener,
+    UpdateCabangIni,
+    DownloadListener
 }
   
