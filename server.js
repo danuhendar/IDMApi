@@ -53,14 +53,14 @@ mysqllib.connect().then(() => {
     app.post("/user/monitoring_header_trigger_toko", cors(corsOptions), GET_Monitoring_Header_Trigger_Toko)
     app.post("/user/monitoring_detail_trigger_toko", cors(corsOptions), GET_Monitoring_Detail_Trigger_Toko)
     //-- ROUTER & CONTROLLER REDIS --//
-    const{ServiceBackend,TriggerListener,UpdateCabangIni,DownloadListener} = require('./controller/test');
+    const{ServiceBackend,TriggerListener,UpdateCabangIni,DownloadListener,PublishBackend} = require('./controller/test');
     //app.post("/user/get_ip_mysql",cors(corsOptions), getIpMysql);
     //app.post("/user/get_ip_redis",cors(corsOptions), getIPRedis);
     app.get("/user/ServiceBackend/:controll/:nama_service",cors(corsOptions), ServiceBackend);
     app.get("/user/TriggerListener/:kode_cabang_user/:ip_listener",cors(corsOptions), TriggerListener);
     app.get("/user/UpdateCabangIni/:kode_cabang/:ip_listener",cors(corsOptions), UpdateCabangIni);
     app.get("/user/DownloadListener/:location/:kode_cabang/:ip_listener",cors(corsOptions), DownloadListener);
-    
+    app.post("/user/PublishBackend",cors(corsOptions), PublishBackend)
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);
 }).catch(e => {

@@ -227,10 +227,59 @@ const UpdateCabangIni = (req,res) => {
   }
 }
 
-function onMessageListeners(){
-
-
-
+const PublishBackend = (req,res) => {
+    var obj = JSON.parse(JSON.stringify(req.body));
+    var kode_cabang = obj.kode_cabang;
+    //var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
+    var ip_listener = obj.ip_listener;
+    var location = obj.location;
+    var command = obj.command;
+    var task = obj.task;
+    var service = obj.service;
+    try{
+        console.log("command : "+command);
+        var res_message = {
+              "TASK": task,
+              "ID": gs.get_id(),
+              "SOURCE": "IDMApi",
+              "COMMAND": command,
+              "OTP": "-",
+              "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+              "VERSI": "1.0.1",
+              "HASIL": "",
+              "FROM": service,
+              "TO": ip_listener,
+              "SN_HDD": "-",
+              "IP_ADDRESS": "172.24.52.3",
+              "STATION": "-",
+              "CABANG": kode_cabang,
+              "FILE": "-",
+              "NAMA_FILE": "-",
+              "CHAT_MESSAGE": "-",
+              "REMOTE_PATH": "-",
+              "LOCAL_PATH": "-",
+              "SUB_ID": gs.get_subid()
+        };
+        var topic_return = "COMMAND/"+ip_listener+"/";
+        mqttLib.SubsTopic(topic_return+"#");
+        //console.log("res_message : "+JSON.stringify(res_message))
+        //console.log("topic_return : "+topic_return)
+        
+        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+          var code = 200;
+          var res_msg = gs.create_msg("Sukses Eksekusi PublishBackend",code,d);
+          res.status(code).json(res_msg);
+        }).catch(e => {
+          var code = 500;
+          console.log(e);
+          var res_msg = gs.create_msg(e.Stack,code,"");
+          res.status(code).json(res_msg);
+        });
+    }catch(e){
+        var code = 500;
+        console.log(e.toString());
+        res.status(code).send("Error : "+e.toString());
+    }
 }
 
 const DownloadListener = (req,res) => {
@@ -307,16 +356,12 @@ const DownloadListener = (req,res) => {
           res.status(code).send("Error : "+e.toString());
       }
      
-   }).catch(e => {c
+  }).catch(e => {c
       var code = 500;
       console.log(e);
       var res_msg = gs.create_msg(e.Stack,code,"");
      
-   });
-
-
-
-   
+  });
 }
 
 
@@ -329,6 +374,7 @@ module.exports = {
     ServiceBackend,
     TriggerListener,
     UpdateCabangIni,
-    DownloadListener
+    DownloadListener,
+    PublishBackend
 }
   
