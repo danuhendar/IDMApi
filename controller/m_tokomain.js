@@ -1,40 +1,34 @@
 var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');
-const redis = require('redis');
+var redislib = require('../connection/redis_connection');
+
+// const redis = require('redis');
 
 
-const client = redis.createClient(6379, "172.24.52.3");
+// const client = redis.createClient(6379, "172.24.52.3");
 
-client.on('connect', function() {
-  console.log('✅ 💃 connect redis success !')
-});
+// client.on('connect', function() {
+//   console.log('✅ 💃 connect redis success !')
+// });
 
-client.on("error", function (err) {
-  console.log("" + err);
-});
+// client.on("error", function (err) {
+//   console.log("" + err);
+// });
 
-client.on("ready", () => {
-  console.log('✅ 💃 redis have ready !')
-});
+// client.on("ready", () => {
+//   console.log('✅ 💃 redis have ready !')
+// });
 
 
 
 const GET_Tokomain = (req, res) => {
   console.log("Mengakses API GET_Tokomain pada "+gs.get_datetime())
-
- 
- 
   var obj = JSON.parse(JSON.stringify(req.body));
   var IN_KODE_CABANG = obj.IN_KODE_CABANG
   var IN_STATION = obj.IN_STATION
   var IN_KODE_TOKO = obj.IN_KODE_TOKO
   var IN_TOKEN = obj.IN_TOKEN
 
-  /*
-  mysqlLib.Verifikasi_Token(IN_TOKEN).then((d)=>{
-    console.log("HASIL VERIFIKASI : "+d);
-  });
-  */
   var res_station = "";
   if(IN_STATION == ''){
     res_station = "ALL";
@@ -56,7 +50,41 @@ const GET_Tokomain = (req, res) => {
     res_toko = IN_KODE_TOKO;
   }
 
+
+
   const redisKey = 'get_tokomain_'+res_cabang+"_"+res_toko+"_"+res_station;
+  var isExists = false;
+  redislib.isExists_Key(redisKey).then((d)=>{
+      isExists = d;
+      console.log('isExists : '+isExists);
+      if(isExists == true){
+          var data = '';
+          redislib.getKey_REDIS(redisKey).then((e) =>{
+              data = e;
+              console.log("data exists");
+              var code = 200;
+              var res_msg = gs.create_msg("Sukses Cache",code,data);
+              res.status(code).json(res_msg);
+          });
+         
+      }else{
+        console.log("data didn't exists");
+        mysqlLib.executeQuery("select c.KDCAB,c.TOKO,c.NAMA,c.STATION,c.IP,IS_INDUK,d.USER,d.PASSWORD from tokomain c INNER JOIN (SELECT a.USER,GROUP_CONCAT(a.PASS SEPARATOR '|') AS PASSWORD FROM m_pass_sql a WHERE DB LIKE 'pos%' AND IS_AKTIF = '1') d where c.KDCAB LIKE '"+IN_KODE_CABANG+"%' AND c.TOKO LIKE '"+IN_KODE_TOKO+"%' AND c.STATION LIKE '"+IN_STATION+"%' ").then((d) => {
+          redislib.setKey_REDIS(redisKey,JSON.stringify(d),7200);
+          //client.set(redisKey,JSON.stringify(d),'EX',7200); // simpan hasil query ke dalam redis dalam bentuk JSON yang sudah di jadikan string, kita setting expired selaman 60 (detik)
+          var code = 200;
+          var res_msg = gs.create_msg("Sukses",code,JSON.stringify(d));
+          res.status(code).json(res_msg);
+        }).catch(e => {
+          var code = 500;
+          console.log(e);
+          var res_msg = gs.create_msg(e.Stack,code,"");
+          res.status(code).json(res_msg);
+        });
+      }
+  });
+  
+  /*
   client.get(redisKey,(err,data) => {
       if(data != null){// cek apakah ada di redis atau tidak 
           console.log("data exists");
@@ -80,6 +108,7 @@ const GET_Tokomain = (req, res) => {
           });
       }
   });
+  */
   
 }
 

@@ -61,6 +61,20 @@ mysqllib.connect().then(() => {
     app.get("/user/UpdateCabangIni/:kode_cabang/:ip_listener",cors(corsOptions), UpdateCabangIni);
     app.get("/user/DownloadListener/:location/:kode_cabang/:ip_listener",cors(corsOptions), DownloadListener);
     app.post("/user/PublishBackend",cors(corsOptions), PublishBackend)
+    
+    const{LaporanListenerNOK} = require('./controller/laporan_listener/LaporanListenerNOK');
+    app.post("/user/LaporanListenerNOK",cors(corsOptions), LaporanListenerNOK)
+
+    const{TargetDownload,CekFileSize} = require('./controller/update_listener/UpdateListener');
+    app.post("/user/TargetDownload",cors(corsOptions), TargetDownload)
+
+    const{InsStatusToko} = require('./controller/tokomain/SyncStatusToko');
+    app.post("/user/InsStatusToko",cors(corsOptions), InsStatusToko)
+
+    //-- MASTER DATA --//
+    const{MasterFTPServer} = require('./controller/master_data/GetMasterData');
+    app.post("/user/MasterFTPServer",cors(corsOptions), MasterFTPServer)
+
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);
 }).catch(e => {

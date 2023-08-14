@@ -4,7 +4,8 @@ const jwtKey_refresh_token = 'rahasia'
 const jwt_token_ExpirySeconds = 1800 //-- expired 30 menit
 const jwtRefresh_token_ExpirySeconds = 7200 //-- expired 2 jam
 const bodyParser = require('body-parser')
-
+var redislib = require('../connection/redis_connection');
+/*
 const redis = require('redis')
 
 const client = redis.createClient(6379, "172.24.52.3");
@@ -20,7 +21,7 @@ client.on("error", function (err) {
 client.on("ready", () => {
   console.log('✅ 💃 redis have ready !')
 });
-
+*/
 
 var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');

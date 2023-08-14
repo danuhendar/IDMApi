@@ -5,21 +5,9 @@ var gs = require('../controller/global_service');
 const {NodeSSH} = require('node-ssh')
 const ssh = new NodeSSH()
 
-const client = redis.createClient(6379, "172.24.52.3");
-/*
-client.on('connect', function() {
-  console.log('✅ 💃 connect redis success !')
-});
-
-
-client.on("error", function (err) {
-  console.log("" + err);
-});
-
-client.on("ready", () => {
-  console.log('✅ 💃 redis have ready !')
-});
-*/
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 
 const getIpMysql = (req, res) => {
     console.log("Mengakses API getIPMysql pada "+gs.get_datetime())
@@ -119,12 +107,17 @@ const ServiceBackend = (req,res) => {
 const TriggerListener = (req,res) => {
    var kode_cabang_user = req.params.kode_cabang_user;
    var ip_listener = req.params.ip_listener;
+   var location = '';
+   var command = '';
+   var task = "PUB_INITIAL";
+   var service = 'ServiceInitial';
+   var is_return = false;
 
    console.log("Trigger Listeners : "+ip_listener);
    try{
 
       var res_message = {
-            "TASK": "PUB_INITIAL",
+            "TASK": task,
             "ID": gs.get_id(),
             "SOURCE": "IDMApi",
             "COMMAND": "C:\\IDMCommandListeners\\IDMCommandSpyService.exe",
@@ -132,7 +125,7 @@ const TriggerListener = (req,res) => {
             "TANGGAL_JAM": gs.get_tanggal_jam("1"),
             "VERSI": "1.0.1",
             "HASIL": "",
-            "FROM": "IDMApi",
+            "FROM": service,
             "TO": ip_listener,
             "SN_HDD": "-",
             "IP_ADDRESS": "172.24.52.3",
@@ -149,7 +142,7 @@ const TriggerListener = (req,res) => {
       //console.log("res_message : "+JSON.stringify(res_message))
       //console.log("topic_return : "+topic_return)
       
-      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang_user,ip_listener).then((d) => {
         var code = 200;
         var res_msg = gs.create_msg("Sukses Trigger Listener : "+ip_listener,code,d);
         res.status(code).json(res_msg);
@@ -170,6 +163,12 @@ const UpdateCabangIni = (req,res) => {
    var kode_cabang = req.params.kode_cabang;
    var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
    var ip_listener = req.params.ip_listener;
+   var location = '';
+   var command = '';
+   var task = "COMMAND";
+   var service = 'ServiceCabangIni';
+   var is_return = false;
+
 
    console.log("Perbaikan Cabang ini ke : "+ip_listener);
    try{
@@ -193,7 +192,7 @@ const UpdateCabangIni = (req,res) => {
             "TANGGAL_JAM": gs.get_tanggal_jam("1"),
             "VERSI": "1.0.1",
             "HASIL": "",
-            "FROM": "IDMApi",
+            "FROM": service,
             "TO": ip_listener,
             "SN_HDD": "-",
             "IP_ADDRESS": "172.24.52.3",
@@ -210,7 +209,7 @@ const UpdateCabangIni = (req,res) => {
       //console.log("res_message : "+JSON.stringify(res_message))
       //console.log("topic_return : "+topic_return)
       
-      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener).then((d) => {
         var code = 200;
         var res_msg = gs.create_msg("Sukses Eksekusi Cabang ini",code,d);
         res.status(code).json(res_msg);
@@ -236,8 +235,10 @@ const PublishBackend = (req,res) => {
     var command = obj.command;
     var task = obj.task;
     var service = obj.service;
+    var is_return = obj.is_return
+    //console.log('service dari : '+service)
     try{
-        console.log("command : "+command);
+        //console.log("command : "+command);
         var res_message = {
               "TASK": task,
               "ID": gs.get_id(),
@@ -260,12 +261,18 @@ const PublishBackend = (req,res) => {
               "LOCAL_PATH": "-",
               "SUB_ID": gs.get_subid()
         };
-        var topic_return = "COMMAND/"+ip_listener+"/";
-        mqttLib.SubsTopic(topic_return+"#");
+        var topic_return = "";
+        if(task === 'COMMAND'){
+          topic_return = "COMMAND/"+ip_listener+"/";  
+        }else{
+          topic_return = ""+ip_listener+"/";
+        }
+        
+        //mqttLib.SubsTopic(topic_return+"#");
         //console.log("res_message : "+JSON.stringify(res_message))
         //console.log("topic_return : "+topic_return)
         
-        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message)).then((d) => {
+        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener).then((d) => {
           var code = 200;
           var res_msg = gs.create_msg("Sukses Eksekusi PublishBackend",code,d);
           res.status(code).json(res_msg);
@@ -283,10 +290,15 @@ const PublishBackend = (req,res) => {
 }
 
 const DownloadListener = (req,res) => {
-   var kode_cabang = req.params.kode_cabang;
-   var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
-   var ip_listener = req.params.ip_listener;
-   var location = req.params.location;
+    var kode_cabang = obj.kode_cabang;
+    //var list_kode_cabang = "G001,G004,G005,G009,G259,G020,G025,G026,G027,G028,G029,G030,G033,G034,G049,G050,G080,G089,G092,G244,G105,G107,G113,G116,G117,G137,G143,G146,G148,G149,G156,G157,G158,G165,G174,G177,G224,G232,G234,G301,G236,G237,G305,G801,G241,G242,G244,G245,G260,G097";
+    var ip_listener = obj.ip_listener;
+    var location = obj.location;
+    var command = obj.command;
+    var task = obj.task;
+    var service = obj.service;
+    var is_return = obj.is_return
+
    var username_ftp = '';
    var pass_ftp = '';
    var ip_ftp = '';
@@ -307,8 +319,10 @@ const DownloadListener = (req,res) => {
 
       console.log("Download Listener ke : "+ip_listener);
       try{
+          /*
           var command = "D:\\Backoff\\wget -P d:/ --user="+username_ftp+" --password="+pass_ftp+" --limit-rate=100K ftp://"+ip_ftp+":"+port_ftp+"/"+path_ftp+"IDMCommandListenersV421RC1-FILEUPDATE.zip -N \n"+
                         "exit";
+          */
           console.log("command : "+command);
           var res_message = {
                 "TASK": "COMMAND",
@@ -324,7 +338,7 @@ const DownloadListener = (req,res) => {
                 "SN_HDD": "-",
                 "IP_ADDRESS": "172.24.52.3",
                 "STATION": "-",
-                "CABANG": list_kode_cabang,
+                "CABANG": kode_cabang,
                 "FILE": "-",
                 "NAMA_FILE": "-",
                 "CHAT_MESSAGE": "-",
@@ -369,8 +383,6 @@ const DownloadListener = (req,res) => {
 
 
 module.exports = {
-    //getIpMysql,
-    //getIPRedis,
     ServiceBackend,
     TriggerListener,
     UpdateCabangIni,
