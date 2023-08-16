@@ -19,7 +19,8 @@
     },
     "redis": {
         "HOST_REDIS": "172.24.52.3",
-        "PORT_REDIS":6379
+        "PORT_REDIS":6379,
+        "EXPIRED_KEY":1800
     },
     "email": {
         "MAIL_FORM": "Member Area 👻 <danu@regmlg.indomaret.co.id>",

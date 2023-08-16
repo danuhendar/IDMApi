@@ -3,6 +3,10 @@ const {gzip, ungzip}  = require('node-gzip');
 var mysqlLib = require('../connection/mysql_connection');
 var redislib = require('../connection/redis_connection');
 
+const config = require('../config.json');
+var rconfig = JSON.stringify(config);
+let student = JSON.parse(rconfig);
+
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
@@ -18,7 +22,8 @@ client.on("error",function(error){
   process.exit(1)
 });
 
-
+var expired_key = config.redis.EXPIRED_KEY;
+console.log('expired_key : '+expired_key);
 
 function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_listener) {
   //console.log(`query: `, query)
@@ -188,7 +193,7 @@ function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
               resolve()
           }else if(to == 'ServiceInitial'){
-              var sql = "REPLACE INTO transaksi_initial_listener VALUES('"+ip_address.trim()+"','"+ip_address+"','"+to+"','"+hasil+"','"+versi+"',NOW())";
+              var sql = "REPLACE INTO transaksi_initial_listener VALUES('"+ip_address.trim()+"','"+to+"','"+hasil+"','"+versi+"',NOW())";
               //console.log('sql_dokumentasi :'+sql)
               mysqlLib.executeQuery(sql);
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
@@ -197,7 +202,7 @@ function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
               //var sql = "REPLACE INTO transaksi_update_listeners VALUES(NULL,'"+ip_address.trim()+"','"+to+"','"+hasil+"','"+versi+"',NOW())";
               //console.log('sql_dokumentasi :'+sql)
               //mysqlLib.executeQuery(sql);
-              //var key_redis = '';
+              var key_redis = '';
               if(command.includes('wget')){
                   key_redis = "DOWNLOAD_"+ip_address;
               }else if(command.includes('dir')){
@@ -208,9 +213,11 @@ function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
                   key_redis = "CEKVERSI_"+ip_address;
               }else if(command.includes('sc query IDMCommandSpy')){
                   key_redis = "CEKSPY_"+ip_address;
+              }else{
+                  console.log('COMMAND TIDAK DIKETAHUI : '+command);
               }
-             
-              redislib.setKey_REDIS(key_redis,hasil,180);
+              
+              redislib.setKey_REDIS(key_redis,hasil,parseFloat(expired_key));
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
               resolve()
           }

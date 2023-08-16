@@ -72,8 +72,9 @@ mysqllib.connect().then(() => {
     app.post("/user/InsStatusToko",cors(corsOptions), InsStatusToko)
 
     //-- MASTER DATA --//
-    const{MasterFTPServer} = require('./controller/master_data/GetMasterData');
+    const{MasterFTPServer,GetMasterSetting} = require('./controller/master_data/GetMasterData');
     app.post("/user/MasterFTPServer",cors(corsOptions), MasterFTPServer)
+    app.post("/user/GetMasterSetting",cors(corsOptions), GetMasterSetting)
 
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);
