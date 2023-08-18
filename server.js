@@ -65,11 +65,13 @@ mysqllib.connect().then(() => {
     const{LaporanListenerNOK} = require('./controller/laporan_listener/LaporanListenerNOK');
     app.post("/user/LaporanListenerNOK",cors(corsOptions), LaporanListenerNOK)
 
-    const{TargetDownload,CekFileSize} = require('./controller/update_listener/UpdateListener');
+    const{TargetDownload,FlagUpdateListeners} = require('./controller/update_listener/UpdateListener');
     app.post("/user/TargetDownload",cors(corsOptions), TargetDownload)
+    app.post("/user/FlagUpdateListeners",cors(corsOptions), FlagUpdateListeners)
 
-    const{InsStatusToko} = require('./controller/tokomain/SyncStatusToko');
+    const{InsStatusToko,UpdRECIDTokomain} = require('./controller/tokomain/SyncStatusToko');
     app.post("/user/InsStatusToko",cors(corsOptions), InsStatusToko)
+    app.post("/user/UpdRECIDTokomain",cors(corsOptions), UpdRECIDTokomain)
 
     //-- MASTER DATA --//
     const{MasterFTPServer,GetMasterSetting} = require('./controller/master_data/GetMasterData');

@@ -21,6 +21,20 @@ client.on("ready", () => {
 });
 
 
+function Remove_Key(in_redisKey){
+    var res = false;
+    return new Promise((resolve, reject) => {
+        try{
+            client.del(in_redisKey,(err,data) => {
+                res = true;
+                resolve(res)
+            });
+        }catch(ex){
+            reject(ex)
+        }
+       
+    });
+}
 
 function isExists_Key(in_redisKey){
     var res = false;
@@ -83,4 +97,5 @@ function getKey_REDIS(in_redisKey){
 
 module.exports.isExists_Key = isExists_Key;
 module.exports.setKey_REDIS = setKey_REDIS;
-module.exports.getKey_REDIS = getKey_REDIS
+module.exports.getKey_REDIS = getKey_REDIS;
+module.exports.Remove_Key = Remove_Key;
