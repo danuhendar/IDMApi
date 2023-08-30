@@ -2,25 +2,6 @@ var mysqlLib = require('../connection/mysql_connection');
 var gs = require('../controller/global_service');
 var redislib = require('../connection/redis_connection');
 
-// const redis = require('redis');
-
-
-// const client = redis.createClient(6379, "172.24.52.3");
-
-// client.on('connect', function() {
-//   console.log('✅ 💃 connect redis success !')
-// });
-
-// client.on("error", function (err) {
-//   console.log("" + err);
-// });
-
-// client.on("ready", () => {
-//   console.log('✅ 💃 redis have ready !')
-// });
-
-
-
 const GET_Tokomain = (req, res) => {
   console.log("Mengakses API GET_Tokomain pada "+gs.get_datetime())
   var obj = JSON.parse(JSON.stringify(req.body));
@@ -65,6 +46,7 @@ const GET_Tokomain = (req, res) => {
               var code = 200;
               var res_msg = gs.create_msg("Sukses Cache",code,data);
               res.status(code).json(res_msg);
+              res.end();
           });
          
       }else{
@@ -80,6 +62,7 @@ const GET_Tokomain = (req, res) => {
           console.log(e);
           var res_msg = gs.create_msg(e.Stack,code,"");
           res.status(code).json(res_msg);
+          res.end();
         });
       }
   });

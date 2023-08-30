@@ -69,9 +69,10 @@ mysqllib.connect().then(() => {
     app.post("/user/TargetDownload",cors(corsOptions), TargetDownload)
     app.post("/user/FlagUpdateListeners",cors(corsOptions), FlagUpdateListeners)
 
-    const{InsStatusToko,UpdRECIDTokomain} = require('./controller/tokomain/SyncStatusToko');
+    const{InsStatusToko,UpdRECIDTokomain,ResetRECIDAll} = require('./controller/tokomain/SyncStatusToko');
     app.post("/user/InsStatusToko",cors(corsOptions), InsStatusToko)
     app.post("/user/UpdRECIDTokomain",cors(corsOptions), UpdRECIDTokomain)
+    app.post("/user/ResetRECIDAll",cors(corsOptions), ResetRECIDAll)
 
     //-- MASTER DATA --//
     const{MasterFTPServer,GetMasterSetting} = require('./controller/master_data/GetMasterData');
@@ -80,6 +81,11 @@ mysqllib.connect().then(() => {
 
     console.log('todo list RESTful API server started on: ' + port);
     app.listen(port);
+    app.maxConnections = 50;
+
+    var timeout = require('connect-timeout');
+    app.use(timeout('60s')); //set 5s timeout for all requests
+
 }).catch(e => {
   console.error(e.stack)
   process.exit()

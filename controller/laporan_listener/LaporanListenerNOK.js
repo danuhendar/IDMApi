@@ -13,11 +13,13 @@ const LaporanListenerNOK = (req, res) => {
       var code = 200;
       var res_msg = gs.create_msg("Sukses",code,JSON.stringify(d[0]));
       res.status(code).json(res_msg);
+      res.end();
     }).catch(e => {
       var code = 500;
       console.log(e);
       var res_msg = gs.create_msg(e.Stack,code,"");
       res.status(code).json(res_msg);
+      res.end();
     });  
 }
  

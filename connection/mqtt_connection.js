@@ -130,25 +130,30 @@ function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_lis
   })  
 }
 
-function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
+async function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
 
     return new Promise((resolve, reject) => {
       try{
 
           if(to == 'ServiceMemoryInfo'){
-              var res_hasil = hasil.split(', ~')[1];
-              var memory_installed = res_hasil.split('~')[0];
-              var memory_physical = res_hasil.split('~')[1];
-              var memory_usage = res_hasil.split('~')[2];
-              var memory_free = res_hasil.split('~')[3];
-              var arsitektur = res_hasil.split('~')[4];
-              var os = res_hasil.split('~')[5];
+              if(hasil == ''){
+                resolve()
+              }else{
+                //console.log('hasil : '+hasil);
+                var res_hasil = hasil.toString().split(', ~')[1];
+                var memory_installed = res_hasil.toString().split('~')[0];
+                var memory_physical = res_hasil.toString().split('~')[1];
+                var memory_usage = res_hasil.toString().split('~')[2];
+                var memory_free = res_hasil.toString().split('~')[3];
+                var arsitektur = res_hasil.toString().split('~')[4];
+                var os = res_hasil.toString().split('~')[5];
 
-              var sql = "REPLACE INTO transaksi_summary_memory_toko_baru VALUES('"+ip_address.trim()+"','"+memory_installed.trim()+"','"+memory_physical.trim()+"','"+memory_usage.trim()+"','"+memory_free.trim()+"','"+arsitektur.trim()+"','"+os.trim()+"',NOW(),'"+versi+"')";
-              //console.log('sql_dokumentasi :'+sql)
-              mysqlLib.executeQuery(sql);
-              console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
-              resolve()
+                var sql = "REPLACE INTO transaksi_summary_memory_toko_baru VALUES('"+ip_address.trim()+"','"+memory_installed.trim()+"','"+memory_physical.trim()+"','"+memory_usage.trim()+"','"+memory_free.trim()+"','"+arsitektur.trim()+"','"+os.trim()+"',NOW(),'"+versi+"')";
+                //console.log('sql_dokumentasi :'+sql)
+                mysqlLib.executeQuery(sql);
+                console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
+                resolve()
+              }
           }else if(to == 'ServicePhysicalDisk'){
               var res_hasil = hasil.replace('"DeviceId","Model","MediaType","BusType"','').trim();
               var device_id = res_hasil.split(',')[0].split('"').join('');

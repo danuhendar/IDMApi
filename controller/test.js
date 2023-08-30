@@ -19,11 +19,13 @@ const getIpMysql = (req, res) => {
       var code = 200;
       var res_msg = gs.create_msg("Sukses",code,d);
       res.status(code).json(res_msg);
+      res.end();
     }).catch(e => {c
       var code = 500;
       console.log(e);
       var res_msg = gs.create_msg(e.Stack,code,"");
       res.status(code).json(res_msg);
+      res.end();
     });
   }
 
@@ -44,6 +46,7 @@ const getIpMysql = (req, res) => {
 
             var res_msg = gs.create_msg("Sukses Cache",code,data);
             res.status(code).json(res_msg);
+            res.end();
 
             //res.status(200).send({isCached:true,data:JSON.parse(data)});
         }else{
@@ -53,11 +56,13 @@ const getIpMysql = (req, res) => {
                 var code = 200;
                 var res_msg = gs.create_msg("Sukses",code,d);
                 res.status(code).json(res_msg);
+                res.end();
               }).catch(e => {
                 var code = 500;
                 console.log(e);
                 var res_msg = gs.create_msg(e.Stack,code,"");
                 res.status(code).json(res_msg);
+                res.end();
               });
         }
     });
@@ -142,20 +147,16 @@ const TriggerListener = (req,res) => {
       //console.log("res_message : "+JSON.stringify(res_message))
       //console.log("topic_return : "+topic_return)
       
-      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang_user,ip_listener).then((d) => {
-        var code = 200;
-        var res_msg = gs.create_msg("Sukses Trigger Listener : "+ip_listener,code,d);
-        res.status(code).json(res_msg);
-      }).catch(e => {
-        var code = 500;
-        console.log(e);
-        var res_msg = gs.create_msg(e.Stack,code,"");
-        res.status(code).json(res_msg);
-      });
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang_user,ip_listener);
+      var code = 200;
+      var res_msg = gs.create_msg("Sukses Trigger Listener : "+ip_listener,code,'');
+      res.status(code).json(res_msg);
+      res.end();
   }catch(e){
       var code = 500;
       console.log(e.toString());
       res.status(code).send("Error : "+e.toString());
+      res.end();
   }
 }
 
@@ -213,16 +214,19 @@ const UpdateCabangIni = (req,res) => {
         var code = 200;
         var res_msg = gs.create_msg("Sukses Eksekusi Cabang ini",code,d);
         res.status(code).json(res_msg);
+        res.end();
       }).catch(e => {
         var code = 500;
         console.log(e);
         var res_msg = gs.create_msg(e.Stack,code,"");
         res.status(code).json(res_msg);
+        res.end();
       });
   }catch(e){
       var code = 500;
       console.log(e.toString());
       res.status(code).send("Error : "+e.toString());
+      res.end();
   }
 }
 
@@ -272,20 +276,16 @@ const PublishBackend = (req,res) => {
         //console.log("res_message : "+JSON.stringify(res_message))
         //console.log("topic_return : "+topic_return)
         
-        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener).then((d) => {
-          var code = 200;
-          var res_msg = gs.create_msg("Sukses Eksekusi PublishBackend",code,d);
-          res.status(code).json(res_msg);
-        }).catch(e => {
-          var code = 500;
-          console.log(e);
-          var res_msg = gs.create_msg(e.Stack,code,"");
-          res.status(code).json(res_msg);
-        });
+        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener);
+        var code = 200;
+        var res_msg = gs.create_msg("Sukses Eksekusi PublishBackend",code,'');
+        res.status(code).json(res_msg);
+        res.end();
     }catch(e){
         var code = 500;
         console.log(e.toString());
         res.status(code).send("Error : "+e.toString());
+        res.end();
     }
 }
 
@@ -355,12 +355,13 @@ const DownloadListener = (req,res) => {
             var code = 200;
             var res_msg = gs.create_msg("Sukses Eksekusi DownloadListener",code,d);
             res.status(code).json(res_msg);
-
+            res.end();
           }).catch(e => {
             var code = 500;
             console.log(e);
             var res_msg = gs.create_msg(e.Stack,code,"");
             res.status(code).json(res_msg);
+            res.end();
           });
 
 
@@ -368,12 +369,14 @@ const DownloadListener = (req,res) => {
           var code = 500;
           console.log(e.toString());
           res.status(code).send("Error : "+e.toString());
+          res.end();
       }
      
   }).catch(e => {c
       var code = 500;
       console.log(e);
       var res_msg = gs.create_msg(e.Stack,code,"");
+      res.end();
      
   });
 }
