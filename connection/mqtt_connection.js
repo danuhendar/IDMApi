@@ -25,7 +25,23 @@ client.on("error",function(error){
 var expired_key = config.redis.EXPIRED_KEY;
 console.log('expired_key : '+expired_key);
 
-function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_listener) {
+function Unsub(res_topic,res_second_unsub){
+  return new Promise((resolve, reject) => {
+    try{
+       //var res_second_unsub = 120000;
+       console.log('res_second_unsub :'+res_second_unsub);
+       sleep(res_second_unsub)
+       client.unsubscribe(res_topic);
+       console.log("UNSUB : "+res_topic);
+       resolve();
+    }
+    catch(ex){
+      reject(ex)
+    }
+  })
+}
+
+function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_listener,is_dokumentasi,in_waktu_unsub) {
   //console.log(`query: `, query)
   return new Promise((resolve, reject) => {
     try{
@@ -40,79 +56,87 @@ function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_lis
                 topic_sub = res_topic+"#";
             }
             //const topic_sub = res_topic+"#";
+            if(is_dokumentasi == true){
+                client.subscribe(topic_sub,{qos:0});
+                console.log("SUBSCRIBE TOPIC : "+topic_sub);
 
-            client.subscribe(topic_sub,{qos:0});
-            console.log("SUBSCRIBE TOPIC : "+topic_sub);
+                  client.on('message',async function(topic, compressed){
+                    if(topic.toString().includes("BYLINE/")){
 
-              client.on('message',async function(topic, compressed){
-                if(topic.toString().includes("BYLINE/")){
-
-                }else{
-                  var  decompressed = '';
-                  try{
-                     decompressed = await ungzip(compressed);
-                     //console.log('Message decompressed');
-                  }catch(ex){
-                     decompressed = compressed;
-                     //console.log('Message it doesnt decompressed');
-                  }
-                  
-                  const parseJson = JSON.parse(decompressed);
-                  //console.log("PESAN : "+decompressed);
-                  // console.log("TOPIC : "+topic)
-                  // console.log("HASIL : "+parseJson.HASIL)
-                  // console.log("SOURCE : "+parseJson.SOURCE)
-                  
-                  
-                  const source = parseJson.SOURCE;
-
-
-                  if(source == 'IDMCommandListeners'){
-                    const id = parseJson.ID;
-                    const subid = parseJson.SUB_ID;
-                    const task = parseJson.TASK;
-                    const kode_cabang = parseJson.CABANG;
-                    const ip_address = parseJson.IP_ADDRESS;
-                    const hasil = parseJson.HASIL;
-                    const to = parseJson.TO;
-                    const versi = parseJson.VERSI;
-                    const station = parseJson.STATION;
-                    const tanggal_jam = parseJson.TANGGAL_JAM;
-                    const command = parseJson.COMMAND;
-                    const summary_hasil = {
-                                            "ID":id,
-                                            "SUBID":subid,
-                                            "TASK":task,
-                                            "SOURCE":source,
-                                            "KODE_CABANG":kode_cabang,
-                                            "IP_ADDRESS":ip_address,
-                                            "HASIL":hasil,
-                                            "TO":to,
-                                            "VERSI":versi,
-                                            "STATION":station,
-                                            "TANGGAL_JAM":tanggal_jam,
-                                            "CMD":command
-                                          };
-                      DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command);
-                      const arr_return = [summary_hasil];
-                      
-                      if(is_return === true){
-                          resolve(arr_return)
-                      }else{
-                          resolve()
+                    }else{
+                      var  decompressed = '';
+                      try{
+                         decompressed = await ungzip(compressed);
+                         //console.log('Message decompressed');
+                      }catch(ex){
+                         decompressed = compressed;
+                         //console.log('Message it doesnt decompressed');
                       }
-                      //-- menunggu 10 detik sebelum melaukan unsubscribe --//
-                      //-- diberi batas 10 detik untuk mendapatkan respon listener --//
-                      //-- 10 detik lewat unsub dan anggap listener tidak merespon atas request yang diberikan --//
-                      sleep(7000)
-                      client.unsubscribe(topic);
-                      console.log("UNSUB : "+topic);
-                  }else{
-                     
-                  }
-                }
-                
-              });
+                      
+                      const parseJson = JSON.parse(decompressed);
+                      //console.log("PESAN : "+decompressed);
+                      // console.log("TOPIC : "+topic)
+                      // console.log("HASIL : "+parseJson.HASIL)
+                      // console.log("SOURCE : "+parseJson.SOURCE)
+                      
+                      
+                      const source = parseJson.SOURCE;
+
+
+                      if(source == 'IDMCommandListeners'){
+                        const id = parseJson.ID;
+                        const subid = parseJson.SUB_ID;
+                        const task = parseJson.TASK;
+                        const kode_cabang = parseJson.CABANG;
+                        const ip_address = parseJson.IP_ADDRESS;
+                        const hasil = parseJson.HASIL;
+                        const to = parseJson.TO;
+                        const versi = parseJson.VERSI;
+                        const station = parseJson.STATION;
+                        const tanggal_jam = parseJson.TANGGAL_JAM;
+                        const command = parseJson.COMMAND;
+                        const summary_hasil = {
+                                                "ID":id,
+                                                "SUBID":subid,
+                                                "TASK":task,
+                                                "SOURCE":source,
+                                                "KODE_CABANG":kode_cabang,
+                                                "IP_ADDRESS":ip_address,
+                                                "HASIL":hasil,
+                                                "TO":to,
+                                                "VERSI":versi,
+                                                "STATION":station,
+                                                "TANGGAL_JAM":tanggal_jam,
+                                                "CMD":command
+                                              };
+                          DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command);
+                          const arr_return = [summary_hasil];
+                          
+                          if(is_return === true){
+                              resolve(arr_return)
+                          }else{
+                              resolve()
+                          }
+                          //-- menunggu 10 detik sebelum melaukan unsubscribe --//
+                          //-- diberi batas 10 detik untuk mendapatkan respon listener --//
+                          //-- 10 detik lewat unsub dan anggap listener tidak merespon atas request yang diberikan --//
+                          
+                          //var res_second_unsub = parseFloat(in_waktu_unsub);
+                          //console.log('res_second_unsub :'+res_second_unsub);
+                          sleep(4000)
+                          client.unsubscribe(topic_sub);
+                          console.log("UNSUB : "+topic_sub);
+                          
+                      }else{
+                         
+                      }
+                    }
+                    
+                });
+            }else{
+              console.log("NO SUB : "+res_topic);
+            }  
+            
 
             //console.log("PAYLOAD TO IDMCommandListeners : "+res_message);
             const compressed = res_message;
@@ -127,7 +151,7 @@ function PublishMessage (res_topic,res_message,is_return,task,kode_cabang,ip_lis
     catch(ex){
       reject(ex)
     }
-  })  
+  })
 }
 
 async function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
@@ -197,13 +221,18 @@ async function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
               mysqlLib.executeQuery(sql);
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
               resolve()
-          }else if(to == 'ServiceInitial'){
+          }
+          /*
+          else if(to == 'ServiceInitial'){
               var sql = "REPLACE INTO transaksi_initial_listener VALUES('"+ip_address.trim()+"','"+to+"','"+hasil+"','"+versi+"',NOW())";
               //console.log('sql_dokumentasi :'+sql)
               mysqlLib.executeQuery(sql);
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
               resolve()
-          }else if(to == 'ServiceDownloadListener'){
+          
+          }
+          */
+          else if(to == 'ServiceDownloadListener'){
               //var sql = "REPLACE INTO transaksi_update_listeners VALUES(NULL,'"+ip_address.trim()+"','"+to+"','"+hasil+"','"+versi+"',NOW())";
               //console.log('sql_dokumentasi :'+sql)
               //mysqlLib.executeQuery(sql);
@@ -226,7 +255,45 @@ async function DokumentasiHasil(kode_cabang,ip_address,hasil,to,versi,command){
               console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
               resolve()
           }
+          /*
+          else if(to == 'ServiceProgramInstalled'){
+            var res_hasil = hasil.replace('"DisplayName","DisplayVersion"','').trim();
+            //console.log('res_hasil : '+res_hasil);
+            var sp_res_hasil = res_hasil.split('\r\n');
+            var arr_program = [];
+            for(var a = 0;a<sp_res_hasil.length;a++){
+                //console.log('Row Program : '+sp_res_hasil.length);
+                var DisplayName = "";
+                var DisplayVersion = "";
+                try{
+                 
+                  DisplayName = sp_res_hasil[a].split(',')[0].split('"').join('');
+                  DisplayVersion = sp_res_hasil[a].split(',')[1].split('"').join('');
+
+                }catch(Ex){
+
+                }
+               
+                if(DisplayName == '' || DisplayVersion == ''){
+
+                }else if(DisplayName == 'null' || DisplayVersion == 'null'){
+
+                }else{
+                  arr_program[a] = [DisplayName,DisplayVersion];
+                }
+              
+            }
+
+            //var arr_concat = [arr_program];
+
+            var sql = "REPLACE INTO transaksi_program_installed_copy VALUES('"+ip_address.trim()+"','"+JSON.stringify(arr_program).split('null,null,').join('')+"',NOW(),'IDMApiV101')";
+            //console.log(sql);
+            mysqlLib.executeQuery(sql);
+            console.log('DOKUMENTASI DARI : '+ip_address+" untuk : "+to);
+          }
+          */
           else{
+              console.log('res_hasil :'+hasil)
               console.log('TIDAK MELAKUKAN DOKUMENTASI PADA : '+to)
           }
       }
@@ -310,4 +377,5 @@ function SubsTopic (res_topic) {
 
 
 module.exports.PublishMessage = PublishMessage
+module.exports.Unsub = Unsub
 //module.exports.SubsTopic = SubsTopic

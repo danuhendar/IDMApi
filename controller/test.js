@@ -117,6 +117,7 @@ const TriggerListener = (req,res) => {
    var task = "PUB_INITIAL";
    var service = 'ServiceInitial';
    var is_return = false;
+   var is_dokumentasi = true;
 
    console.log("Trigger Listeners : "+ip_listener);
    try{
@@ -147,7 +148,7 @@ const TriggerListener = (req,res) => {
       //console.log("res_message : "+JSON.stringify(res_message))
       //console.log("topic_return : "+topic_return)
       
-      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang_user,ip_listener);
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang_user,ip_listener,is_dokumentasi,7000);
       var code = 200;
       var res_msg = gs.create_msg("Sukses Trigger Listener : "+ip_listener,code,'');
       res.status(code).json(res_msg);
@@ -169,7 +170,7 @@ const UpdateCabangIni = (req,res) => {
    var task = "COMMAND";
    var service = 'ServiceCabangIni';
    var is_return = false;
-
+   var is_dokumentasi = true;
 
    console.log("Perbaikan Cabang ini ke : "+ip_listener);
    try{
@@ -210,7 +211,7 @@ const UpdateCabangIni = (req,res) => {
       //console.log("res_message : "+JSON.stringify(res_message))
       //console.log("topic_return : "+topic_return)
       
-      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener).then((d) => {
+      mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener,is_dokumentasi,7000).then((d) => {
         var code = 200;
         var res_msg = gs.create_msg("Sukses Eksekusi Cabang ini",code,d);
         res.status(code).json(res_msg);
@@ -241,42 +242,121 @@ const PublishBackend = (req,res) => {
     var service = obj.service;
     var is_return = obj.is_return
     //console.log('service dari : '+service)
+    var is_dokumentasi = false;
+    if(service != 'ServiceProgramInstalled'){
+        is_dokumentasi = true;
+    }else{
+        is_dokumentasi = false;
+    }
+
     try{
         //console.log("command : "+command);
-        var res_message = {
-              "TASK": task,
-              "ID": gs.get_id(),
-              "SOURCE": "IDMApi",
-              "COMMAND": command,
-              "OTP": "-",
-              "TANGGAL_JAM": gs.get_tanggal_jam("1"),
-              "VERSI": "1.0.1",
-              "HASIL": "",
-              "FROM": service,
-              "TO": ip_listener,
-              "SN_HDD": "-",
-              "IP_ADDRESS": "172.24.52.3",
-              "STATION": "-",
-              "CABANG": kode_cabang,
-              "FILE": "-",
-              "NAMA_FILE": "-",
-              "CHAT_MESSAGE": "-",
-              "REMOTE_PATH": "-",
-              "LOCAL_PATH": "-",
-              "SUB_ID": gs.get_subid()
-        };
         var topic_return = "";
         if(task === 'COMMAND'){
-          topic_return = "COMMAND/"+ip_listener+"/";  
+          console.log('kondisi 1')
+          if(ip_listener == kode_cabang){
+               console.log('kondisi 1.1')                
+               //var query_list_ip = "SELECT STATION FROM tokomain WHERE KDCAB = '"+kode_cabang+"' AND STATION NOT IN('','STB') AND RECID = 1 GROUP BY STATION ORDER BY STATION ASC LIMIT 0,1;"
+               //console.log('query_list_ip : '+query_list_ip)
+               var query_list_ip = "SELECT IP FROM tokomain WHERE KDCAB = '"+kode_cabang+"' AND STATION NOT IN('','STB') AND RECID = 1;"
+               mysqlLib.executeQuery(query_list_ip).then(async(d) => {
+                  console.log('JUMLAH STATION di Cabang :'+kode_cabang+' :'+d.length)
+                  for(var p =0;p<d.length;p++){
+                    await sleep(500)
+                    var res_message = {
+                        "TASK": task,
+                        "ID": gs.get_id(),
+                        "SOURCE": "IDMApi",
+                        "COMMAND": command,
+                        "OTP": "-",
+                        "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+                        "VERSI": "1.0.1",
+                        "HASIL": "",
+                        "FROM": service,
+                        "TO": d[p].IP,
+                        //"TO": d[p].STATION,
+                        "SN_HDD": "-",
+                        "IP_ADDRESS": "172.24.52.3",
+                        "STATION": "-",
+                        "CABANG": kode_cabang,
+                        "FILE": "-",
+                        "NAMA_FILE": "-",
+                        "CHAT_MESSAGE": "-",
+                        "REMOTE_PATH": "-",
+                        "LOCAL_PATH": "-",
+                        "SUB_ID": gs.get_subid()
+                    };
+                    //topic_return = kode_cabang+"/"+d[p].STATION+"/";
+                    topic_return = "COMMAND/"+d[p].IP+"/";
+                    console.log('topic_return :'+topic_return)
+                    mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,d[p].STATION,is_dokumentasi,120000);
+                    //mqttLib.Unsub(topic_return+"#",120000);
+                  }
+                  //mqttLib.Unsub(topic_return+"#",120000);
+              });
+             
+              //console.log("UNSUB : "+topic_sub);
+          }else{
+              console.log('kondisi 1.2')
+              var res_message = {
+                    "TASK": task,
+                    "ID": gs.get_id(),
+                    "SOURCE": "IDMApi",
+                    "COMMAND": command,
+                    "OTP": "-",
+                    "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+                    "VERSI": "1.0.1",
+                    "HASIL": "",
+                    "FROM": service,
+                    "TO": ip_listener,
+                    "SN_HDD": "-",
+                    "IP_ADDRESS": "172.24.52.3",
+                    "STATION": "-",
+                    "CABANG": kode_cabang,
+                    "FILE": "-",
+                    "NAMA_FILE": "-",
+                    "CHAT_MESSAGE": "-",
+                    "REMOTE_PATH": "-",
+                    "LOCAL_PATH": "-",
+                    "SUB_ID": gs.get_subid()
+              };
+              topic_return = "COMMAND/"+ip_listener+"/";    
+              mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener,is_dokumentasi,7000);
+          }
+          
         }else{
+          console.log('kondisi 2')
+          var res_message = {
+                    "TASK": task,
+                    "ID": gs.get_id(),
+                    "SOURCE": "IDMApi",
+                    "COMMAND": command,
+                    "OTP": "-",
+                    "TANGGAL_JAM": gs.get_tanggal_jam("1"),
+                    "VERSI": "1.0.1",
+                    "HASIL": "",
+                    "FROM": service,
+                    "TO": ip_listener,
+                    "SN_HDD": "-",
+                    "IP_ADDRESS": "172.24.52.3",
+                    "STATION": "-",
+                    "CABANG": kode_cabang,
+                    "FILE": "-",
+                    "NAMA_FILE": "-",
+                    "CHAT_MESSAGE": "-",
+                    "REMOTE_PATH": "-",
+                    "LOCAL_PATH": "-",
+                    "SUB_ID": gs.get_subid()
+          };
           topic_return = ""+ip_listener+"/";
+          mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener,is_dokumentasi,7000);
         }
         
         //mqttLib.SubsTopic(topic_return+"#");
         //console.log("res_message : "+JSON.stringify(res_message))
         //console.log("topic_return : "+topic_return)
         
-        mqttLib.PublishMessage(topic_return,JSON.stringify(res_message),is_return,task,kode_cabang,ip_listener);
+       
         var code = 200;
         var res_msg = gs.create_msg("Sukses Eksekusi PublishBackend",code,'');
         res.status(code).json(res_msg);

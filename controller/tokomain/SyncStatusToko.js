@@ -41,25 +41,34 @@ const UpdRECIDTokomain = (req, res) => {
   console.log(data.length);
   for(var a = 0;a<data.length;a++){
     //console.log("========================");
-    var arr_station = data[a].station.split(',');
-    for(var i = 0;i<arr_station.length;i++){
-        var res_station = arr_station[i]; 
-        var res_ip = arr_station[i]; 
-        var sql_query = "REPLACE INTO tokomain_temp VALUES('"+data[a].toko+"','"+res_station+"',NOW(),'V101');";//"UPDATE tokomain SET recid = '1' WHERE TOKO = '"+data[a].toko+"' AND STATION IN('"+data[a].station.split(",").join("','")+"'"+");"; 
-        console.log('sql_query : '+sql_query);
-        mysqlLib.executeQuery(sql_query).then((d) => {
-          
-          //req.end();
-        }).catch(e => {
-          var code = 500;
-          console.log(e);
-          var res_msg = gs.create_msg(e.Stack,code,"");
-          res.status(code).json(res_msg);
-          res.end();
-          //req.end();
-        });
+    try{
+      var arr_station = data[a].station.split(',');
+      for(var i = 0;i<arr_station.length;i++){
+          var res_station = arr_station[i]; 
+          var res_ip = arr_station[i]; 
+          var sql_query = "REPLACE INTO tokomain_temp VALUES('"+data[a].toko+"','"+res_station+"',NOW(),'V101');";//"UPDATE tokomain SET recid = '1' WHERE TOKO = '"+data[a].toko+"' AND STATION IN('"+data[a].station.split(",").join("','")+"'"+");"; 
+          console.log('sql_query : '+sql_query);
+          mysqlLib.executeQuery(sql_query).then((d) => {
+            
+            //req.end();
+          }).catch(e => {
+            var code = 500;
+            console.log(e);
+            var res_msg = gs.create_msg(e.Stack,code,"");
+            res.status(code).json(res_msg);
+            res.end();
+            //req.end();
+          });
 
+      }
+    }catch(Ex1){
+        console.log("ERROR PARSING : "+Ex1);
+        var code = 500;
+        var res_msg = gs.create_msg(Ex1.Stack,code,"");
+        res.status(code).json(res_msg);
+        res.end();
     }
+   
 
     //-- execute query UPDATE tokomain --//
   }
